@@ -5,6 +5,7 @@ import dotenv from 'dotenv';
 import cors from 'cors';
 import mealRoutes from './routers/mealRoutes.js'; 
 import routerEstudiante from './routers/estudianteRoutes.js';
+import routerAdministrador from './routers/administradorRoutes.js';
 
 // Inicializaciones
 const app = express();
@@ -27,8 +28,10 @@ app.get('/', (req, res) => {
 
 app.get('/',(req,res)=>res.send("Server on"))
 
-// Rutas para veterinarios
+// Rutas para Estudiante
 app.use('/api',routerEstudiante)
+// Rutas para Administrador
+app.use('/api', routerAdministrador);
 
 // Manejo de una ruta que no sea encontrada
 app.use((req,res)=>res.status(404).send("Endpoint no encontrado - 404"))
