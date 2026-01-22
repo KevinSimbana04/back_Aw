@@ -9,7 +9,7 @@ const sendMailToRegister = (userMail, token) => {
         `
             <h1>Confirma tu cuenta</h1>
             <p>Hola, haz clic en el siguiente enlace para confirmar tu cuenta:</p>
-            <a href="${process.env.URL_FRONTEND}confirm/${token}">
+            <a href="${process.env.URL_BACKEND}confirm/${token}">
             Confirmar cuenta
             </a>
             <hr>
