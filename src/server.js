@@ -30,6 +30,7 @@ app.get('/',(req,res)=>res.send("Server on"))
 
 // Rutas para Estudiante
 app.use('/api',routerEstudiante)
+
 // Rutas para Administrador
 app.use('/api', routerAdministrador);
 

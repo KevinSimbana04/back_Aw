@@ -24,7 +24,7 @@ const sendMail = async (to, subject, html) => {
 
     try {
         const info = await transporter.sendMail({
-            from: '"NUTRIAPP" <admin@nutri.com>',
+            from: '"NUTRIAPP" <joel27tm@gmail.com>',
             to,
             subject,
             html,

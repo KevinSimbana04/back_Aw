@@ -1,5 +1,7 @@
 import { sendMailToRecoveryPassword, sendMailToRegister } from "../helpers/sendMail.js"
 import Estudiante from "../models/Estudiante.js"
+import { crearTokenJWT } from "../middleware/JWT.js"
+import mongoose from "mongoose"
 
 const registro =async(req,res)=>{
     try{
@@ -109,15 +111,18 @@ const login = async(req,res)=>{
         if(!estudianteBDD.confirmEmail) return res.status(403).json({msg:"Debes verificar tu cuenta antes de iniciar sesión"})
         const verificarPassword = await estudianteBDD.matchPassword(password)
         if(!verificarPassword) return res.status(401).json({msg:"El password no es correcto"})
-        const {nombre,apellido,direccion,celular,_id,rol} = estudianteBDD
+        const { nombre, apellido, direccion, celular, _id, rol } = estudianteBDD; 
+        const token = crearTokenJWT(estudianteBDD._id, estudianteBDD.rol);
+
         res.status(200).json({
+            token,
             rol,
             nombre,
             apellido,
             direccion,
             celular,
             _id,
-            email:estudianteBDD.email
+            email: estudianteBDD.email
         })
 
     } catch (error) {
@@ -126,7 +131,40 @@ const login = async(req,res)=>{
     }
 }
 
+const perfil =(req,res)=>{
+	const {token,confirmEmail,createdAt,updatedAt,__v,...datosPerfil} = req.estudianteHeader
+    res.status(200).json(datosPerfil)
+}
 
+const actualizarPerfil = async (req,res)=>{
+
+    try {
+        const {id} = req.params
+        const {nombre,apellido,celular,email} = req.body
+        if( !mongoose.Types.ObjectId.isValid(id) ) return res.status(400).json({msg:`ID inválido: ${id}`})
+        const estudianteBDD = await Estudiante.findById(id)
+        if(!estudianteBDD) return res.status(404).json({ msg: `No existe el estudiante con ID ${id}` })
+        if (Object.values(req.body).includes("")) return res.status(400).json({msg:"Debes llenar todos los campos"})
+        if (estudianteBDD.email !== email)
+        {
+            const emailExistente  = await Estudiante.findOne({email})
+            if (emailExistente )
+            {
+                return res.status(404).json({msg:`El email ya se encuentra registrado`})  
+            }
+        }
+        estudianteBDD.nombre = nombre ?? estudianteBDD.nombre
+        estudianteBDD.apellido = apellido ?? estudianteBDD.apellido
+        estudianteBDD.celular = celular ?? estudianteBDD.celular
+        estudianteBDD.email = email ?? estudianteBDD.email
+        await estudianteBDD.save()
+        res.status(200).json(estudianteBDD)
+        
+    } catch (error) {
+        console.error(error)
+        res.status(500).json({ msg: `❌ Error en el servidor - ${error}` })
+    }
+}
 
 export {
     registro,
@@ -134,5 +172,7 @@ export {
     recuperarPassword,
     comprobarTokenPassword,
     crearNuevoPassword,
-    login
+    login,
+    perfil,
+    actualizarPerfil
 }
