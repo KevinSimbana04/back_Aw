@@ -28,7 +28,7 @@ const verificarTokenJWT = async (req, res, next) => {
             const estudianteBDD = await Estudiante.findById(id).lean().select("-password")
             if (!estudianteBDD) return res.status(401).json({ msg: "Usuario no encontrado" })
             req.estudianteHeader = estudianteBDD
-            next()
+             return next()
         }
 
         //Verificación de Administrador
@@ -37,7 +37,7 @@ const verificarTokenJWT = async (req, res, next) => {
             const adminBDD = await Administrador.findById(id).lean().select("-password")
             if (!adminBDD) return res.status(401).json({ msg: "Administrador no encontrado" })
             req.adminHeader = adminBDD
-            next()
+            return next()
         }else {
              return res.status(401).json({ msg: "Rol no autorizado" })
         }

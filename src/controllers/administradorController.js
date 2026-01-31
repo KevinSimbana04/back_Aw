@@ -2,38 +2,41 @@ import { sendMailToRecoveryPassword, sendMailToRegister, sendMailToNewAdmin } fr
 import Administrador from "../models/Administrador.js"
 import { crearTokenJWT } from "../middleware/JWT.js"
 
-const registro =async(req,res)=>{
-    try{
-        //Paso 1
+const registro = async (req, res) => {
+    try {
+        // 1. Obtener datos (Usando 'usuario' en lugar de nombre/apellido)
         const { email, usuario, telefono, direccion } = req.body
         
-        // Paso 2
-
-        if (Object.values({ email, usuario, telefono, direccion }).includes("")) {
-            return res.status(400).json({ msg: "Debes llenar todos los campos" })
+        if (!email || !usuario) {
+            return res.status(400).json({ msg: "Los campos 'email' y 'usuario' son obligatorios" })
         }
 
-        const verificarEmailBDD=await Administrador.findOne({email})
-        if(verificarEmailBDD)return res.status(400).json(({msg:"Lo sentimos, el email ya se encuentra registrado"}))
+        // 3. Verificar si existe el email
+        const verificarEmailBDD = await Administrador.findOne({ email })
+        if (verificarEmailBDD) return res.status(400).json({ msg: "Lo sentimos, el email ya se encuentra registrado" })
 
-
-        //Paso 3
+        // 4. Generar password y guardar
         const passwordGenerated = "ADM" + Math.random().toString(36).slice(2, 8)
-        const nuevoAdministrador=new Administrador(req.body)
+        
+        const nuevoAdministrador = new Administrador({
+            usuario,
+            email,
+            telefono,
+            direccion 
+        })
 
         nuevoAdministrador.password = await nuevoAdministrador.encryptPassword(passwordGenerated)
-        nuevoAdministrador.confirmEmail = true
+        nuevoAdministrador.confirmEmail = true 
 
+        // Enviar correo
         await sendMailToNewAdmin(email, passwordGenerated)
 
         await nuevoAdministrador.save()
 
-        //Paso 4
-        res.status(201).json({msg:"Administrador creado exitosamente. Las credenciales han sido enviadas a su correo."})
-    }
-    catch(error){
+        res.status(201).json({ msg: "Administrador creado exitosamente. Las credenciales han sido enviadas a su correo." })
+    } catch (error) {
         console.error(error)
-        res.status(500).json({msg:`❌Error en el servidor -${error}`})
+        res.status(500).json({ msg: `❌ Error en el servidor - ${error}` })
     }
 }
 
