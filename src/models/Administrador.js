@@ -8,6 +8,16 @@ const administradorSchema = new Schema({
         required:true,
         trim:true
     },
+    direccion: {
+        type: String,
+        trim: true,
+        default: null
+    },
+    telefono: {
+        type: String,
+        trim: true,
+        default: null
+    },
     email:{
         type:String,
         required:true,

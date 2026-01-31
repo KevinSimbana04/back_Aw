@@ -5,9 +5,14 @@ import { crearTokenJWT } from "../middleware/JWT.js"
 const registro =async(req,res)=>{
     try{
         //Paso 1
-        const { email, usuario } = req.body
+        const { email, usuario, telefono, direccion } = req.body
         
-        if (Object.values({ email, usuario }).includes("")) return res.status(400).json({ msg: "Debes llenar usuario y email" })
+        // Paso 2
+
+        if (Object.values({ email, usuario, telefono, direccion }).includes("")) {
+            return res.status(400).json({ msg: "Debes llenar todos los campos" })
+        }
+
         const verificarEmailBDD=await Administrador.findOne({email})
         if(verificarEmailBDD)return res.status(400).json(({msg:"Lo sentimos, el email ya se encuentra registrado"}))
 
