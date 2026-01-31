@@ -33,6 +33,7 @@ const sendMail = async (to, subject, html) => {
 
     } catch (error) {
         console.error("❌ Error enviando email:", error.message)
+        throw error
     }
 }
 

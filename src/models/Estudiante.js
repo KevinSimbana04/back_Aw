@@ -13,10 +13,57 @@ const estudianteSchema = new Schema({
         required:true,
         trim:true
     },
+    //falto esto
+    direccion:{
+        type:String,
+        trim:true,
+        default:null
+    },
     celular:{
         type:String,
         trim:true,
         default:null
+    },
+    fechaNacimiento: {
+        type: Date,
+        default: null
+    },
+    estatura: {
+        type: Number,
+        default: null
+    },
+    peso: {
+        type: Number,
+        default: null
+    },
+    sexo: {
+        type: String,
+        trim: true,
+        default: null
+    },
+    alergias: {
+        type: String,
+        trim: true,
+        default: null
+    },
+    preferencias: {
+        type: String,
+        trim: true,
+        default: null
+    },
+    actividadFisica: {
+        type: String,
+        trim: true,
+        default: null
+    },
+    dieta: {
+        type: String,
+        trim: true,
+        default: null
+    },
+    comidasAlDia: {
+        type: Number,
+        default: null
     },
     email:{
         type:String,

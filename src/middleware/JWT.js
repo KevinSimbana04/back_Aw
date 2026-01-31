@@ -1,5 +1,6 @@
 import jwt from "jsonwebtoken"
 import Estudiante from "../models/Estudiante.js"
+import Administrador from "../models/Administrador.js"
 
 
 /**
@@ -14,7 +15,6 @@ const crearTokenJWT = (id, rol) => {
 
 
 
-
 const verificarTokenJWT = async (req, res, next) => {
 
 	const { authorization } = req.headers
@@ -22,12 +22,27 @@ const verificarTokenJWT = async (req, res, next) => {
     try {
         const token = authorization.split(" ")[1]
         const { id, rol } = jwt.verify(token,process.env.JWT_SECRET)
+    
+        //Verificación de estudiante
         if (rol === "estudiante") {
             const estudianteBDD = await Estudiante.findById(id).lean().select("-password")
             if (!estudianteBDD) return res.status(401).json({ msg: "Usuario no encontrado" })
             req.estudianteHeader = estudianteBDD
             next()
         }
+
+        //Verificación de Administrador
+
+        if(rol=== "administrador"){
+            const adminBDD = await Administrador.findById(id).lean().select("-password")
+            if (!adminBDD) return res.status(401).json({ msg: "Administrador no encontrado" })
+            req.adminHeader = adminBDD
+            next()
+        }else {
+             return res.status(401).json({ msg: "Rol no autorizado" })
+        }
+
+
     } catch (error) {
         console.log(error)
         return res.status(401).json({ msg: `Token inválido o expirado - ${error}` })

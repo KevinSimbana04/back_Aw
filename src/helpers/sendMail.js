@@ -35,7 +35,28 @@ const sendMailToRecoveryPassword = (userMail, token) => {
         )
 }
 
+const sendMailToNewAdmin = (userMail, password) => {
+    return sendMail(
+        userMail,
+        "Bienvenido al equipo de Administración - NUTRIAPP",
+        `
+            <h1>Tus credenciales de acceso</h1>
+            <p>Hola, has sido dado de alta como Administrador en el sistema.</p>
+            <p>Tus credenciales de acceso son:</p>
+            <ul>
+                <li><strong>Correo:</strong> ${userMail}</li>
+                <li><strong>Contraseña temporal:</strong> ${password}</li>
+            </ul>
+            <p>Te recomendamos cambiar tu contraseña una vez inicies sesión.</p>
+            <a href="${process.env.URL_BACKEND}login">Iniciar Sesión</a>
+            <hr>
+            <footer>El equipo de NUTRIAPP</footer>
+        `
+    )
+}
+
 export {
     sendMailToRegister,
-    sendMailToRecoveryPassword
+    sendMailToRecoveryPassword,
+    sendMailToNewAdmin // <--- No olvides exportarla
 }

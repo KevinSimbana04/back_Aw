@@ -1,24 +1,33 @@
-import { sendMailToRecoveryPassword, sendMailToRegister } from "../helpers/sendMail.js"
+import { sendMailToRecoveryPassword, sendMailToRegister, sendMailToNewAdmin } from "../helpers/sendMail.js"
 import Administrador from "../models/Administrador.js"
+import { crearTokenJWT } from "../middleware/JWT.js"
 
 const registro =async(req,res)=>{
     try{
         //Paso 1
-        const {email,password}=req.body
-        //Paso 2
-        if (Object.values(req.body).includes(""))return res.status(400).json({msg:"Los sentimos, debes llenar todos los campos"})
+        const { email, usuario } = req.body
+        
+        if (Object.values({ email, usuario }).includes("")) return res.status(400).json({ msg: "Debes llenar usuario y email" })
         const verificarEmailBDD=await Administrador.findOne({email})
         if(verificarEmailBDD)return res.status(400).json(({msg:"Lo sentimos, el email ya se encuentra registrado"}))
+
+
         //Paso 3
+        const passwordGenerated = "ADM" + Math.random().toString(36).slice(2, 8)
         const nuevoAdministrador=new Administrador(req.body)
-        nuevoAdministrador.password = await nuevoAdministrador.encryptPassword(password)
-        const token = nuevoAdministrador.createToken()
-        await sendMailToRegister(email,token)
+
+        nuevoAdministrador.password = await nuevoAdministrador.encryptPassword(passwordGenerated)
+        nuevoAdministrador.confirmEmail = true
+
+        await sendMailToNewAdmin(email, passwordGenerated)
+
         await nuevoAdministrador.save()
+
         //Paso 4
-        res.status(201).json({msg:"Revisa tu correo electronico para confirmar tu cuenta"})
+        res.status(201).json({msg:"Administrador creado exitosamente. Las credenciales han sido enviadas a su correo."})
     }
     catch(error){
+        console.error(error)
         res.status(500).json({msg:`❌Error en el servidor -${error}`})
     }
 }
@@ -109,8 +118,11 @@ const login = async(req,res)=>{
         if(!administradorBDD.confirmEmail) return res.status(403).json({msg:"Debes verificar tu cuenta antes de iniciar sesión"})
         const verificarPassword = await administradorBDD.matchPassword(password)
         if(!verificarPassword) return res.status(401).json({msg:"El password no es correcto"})
+        const token = crearTokenJWT(administradorBDD._id, administradorBDD.rol)
+
         const {usuario,_id,rol} = administradorBDD
         res.status(200).json({
+            token,
             rol,
             usuario,
             _id,

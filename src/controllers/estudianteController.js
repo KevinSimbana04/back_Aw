@@ -131,6 +131,48 @@ const login = async(req,res)=>{
     }
 }
 
+const registrarDatosPersonales = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const {
+            fechaNacimiento,
+            estatura,
+            peso,
+            alergias,
+            preferencias,
+            sexo,
+            actividadFisica,
+            dieta,
+            comidasAlDia
+        } = req.body;
+
+        // Validar ID
+        if (!mongoose.Types.ObjectId.isValid(id)) return res.status(400).json({ msg: `ID inválido` });
+
+        const estudianteBDD = await Estudiante.findById(id);
+        if (!estudianteBDD) return res.status(404).json({ msg: `Usuario no encontrado` });
+
+        // Actualizar solo los campos de datos personales
+        estudianteBDD.fechaNacimiento = fechaNacimiento || estudianteBDD.fechaNacimiento;
+        estudianteBDD.estatura = estatura || estudianteBDD.estatura;
+        estudianteBDD.peso = peso || estudianteBDD.peso;
+        estudianteBDD.alergias = alergias || estudianteBDD.alergias;
+        estudianteBDD.preferencias = preferencias || estudianteBDD.preferencias;
+        estudianteBDD.sexo = sexo || estudianteBDD.sexo;
+        estudianteBDD.actividadFisica = actividadFisica || estudianteBDD.actividadFisica;
+        estudianteBDD.dieta = dieta || estudianteBDD.dieta;
+        estudianteBDD.comidasAlDia = comidasAlDia || estudianteBDD.comidasAlDia;
+
+        await estudianteBDD.save();
+
+        res.status(200).json({ msg: "Datos personales registrados exitosamente", data: estudianteBDD });
+
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ msg: `❌ Error en el servidor - ${error}` });
+    }
+};
+
 const perfil =(req,res)=>{
 	const {token,confirmEmail,createdAt,updatedAt,__v,...datosPerfil} = req.estudianteHeader
     res.status(200).json(datosPerfil)
@@ -172,6 +214,7 @@ export {
     recuperarPassword,
     comprobarTokenPassword,
     crearNuevoPassword,
+    registrarDatosPersonales,
     login,
     perfil,
     actualizarPerfil
