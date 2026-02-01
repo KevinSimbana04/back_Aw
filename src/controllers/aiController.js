@@ -71,7 +71,7 @@ const scanFood = async (req, res) => {
             Devuelve la respuesta ESTRICTAMENTE en este formato JSON (sin texto adicional fuera del JSON):
             {
                 "NombreComida": "Nombre del plato",
-                "nurtrientes": {
+                "nutrientes": {
                     "calorias": "ej. 500 kcal",
                     "carbohidratos": "ej. 40g",
                     "proteinas": "ej. 20g",
@@ -102,16 +102,16 @@ const scanFood = async (req, res) => {
         const data = JSON.parse(jsonStr);
 
         // Guardar en historial si existe usuario
-        if (userId && data.isFood) {
+        if (userId && data.EsComida) {
             try {
                 const nuevoHistorial = new Historial({
                     estudiante: userId,
-                    nombreComida: data.foodName,
-                    calorias: data.nutrients?.calories || "N/A",
-                    proteinas: data.nutrients?.protein || "N/A",
-                    carbohidratos: data.nutrients?.carbs || "N/A",
-                    grasas: data.nutrients?.fat || "N/A",
-                    recomendacion: data.recommendation,
+                    nombreComida: data.NombreComida,
+                    calorias: data.nutrientes?.calorias || "N/A",
+                    proteinas: data.nutrientes?.proteinas || "N/A",
+                    carbohidratos: data.nutrientes?.carbohidratos || "N/A",
+                    grasas: data.nutrientes?.grasas || "N/A",
+                    recomendacion: data.recomendacion,
                     comidaAlternativa: data.comidaAlternativa,
                     imagenUrl: cloudinaryUrl,
                     publicId: cloudinaryPublicId
