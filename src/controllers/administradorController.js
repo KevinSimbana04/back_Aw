@@ -6,7 +6,7 @@ import { crearTokenJWT } from "../middleware/JWT.js"
 
 const registro = async (req, res) => {
     try {
-        // 1. Obtener datos (Usando 'usuario' en lugar de nombre/apellido)
+        // 1. Obtener datos
         const { email, usuario, telefono, direccion } = req.body
 
         if (!email || !usuario) {
@@ -44,7 +44,7 @@ const registro = async (req, res) => {
 
 const confirmarMail = async (req, res) => {
     // Paso 1 - Obtener datos
-    const { token /* la palabra es reservada de la parte de routes (escribir igual) */ } = req.params
+    const { token } = req.params
     // Paso 2 - Validar cuenta
     const administradorBDD = await Administrador.findOne({ token })
     if (!administradorBDD) return res.status(404).json({ msg: "Token invalido o cuenta ya confirmada" })
@@ -165,7 +165,6 @@ const actualizarAdministrador = async (req, res) => {
         const adminBDD = await Administrador.findById(id);
         if (!adminBDD) return res.status(404).json({ msg: "Administrador no encontrado" });
 
-        // Verificar email duplicado (si se cambia)
         if (email !== adminBDD.email) {
             const emailExiste = await Administrador.findOne({ email });
             if (emailExiste) return res.status(400).json({ msg: "El email ya está registrado" });
@@ -186,7 +185,6 @@ const actualizarAdministrador = async (req, res) => {
 const eliminarAdministrador = async (req, res) => {
     try {
         const { id } = req.params;
-        // Evitar que un admin se elimine a sí mismo (opcional, pero recomendado)
         if (req.adminHeader._id.toString() === id) return res.status(400).json({ msg: "No puedes eliminar tu propia cuenta" });
         await Administrador.findByIdAndDelete(id);
         res.json({ msg: "Administrador eliminado correctamente" });
