@@ -8,13 +8,21 @@ import routerEstudiante from './routers/estudianteRoutes.js';
 import routerAdministrador from './routers/administradorRoutes.js';
 import aiRoutes from './routers/aiRoutes.js';
 import fileUpload from 'express-fileupload';
+import cloudinary from 'cloudinary'
 
 // Inicializaciones
 const app = express();
 dotenv.config();
 
+cloudinary.config({
+    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+    api_key: process.env.CLOUDINARY_API_KEY,
+    api_secret: process.env.CLOUDINARY_API_SECRET
+})
+
+
 // Middlewares
-app.use(express.json()); // Permite a Express leer JSON en el cuerpo de las solicitudes
+app.use(express.json());
 app.use(fileUpload({
     useTempFiles: true,
     tempFileDir: './uploads'
@@ -37,7 +45,7 @@ app.get('/', (req, res) => res.send("Server on"))
 app.use('/api', routerEstudiante)
 
 // Rutas para Administrador
-app.use('/api', routerAdministrador);
+app.use('/api/admin', routerAdministrador);
 
 // Rutas para AI
 app.use('/api/ai', aiRoutes);

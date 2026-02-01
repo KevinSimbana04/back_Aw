@@ -11,6 +11,14 @@ const historialSchema = new Schema({
         required: true,
         trim: true
     },
+    imagenUrl: {
+        type: String,
+        default: null
+    },
+    publicId: {
+        type: String,
+        default: null
+    },
     calorias: {
         type: String,
         default: "N/A"
@@ -27,7 +35,15 @@ const historialSchema = new Schema({
         type: String,
         default: "N/A"
     },
+    comidaAlternativa: {
+        type: String,
+        default: ""
+    },
     recomendacion: {
+        type: String,
+        default: ""
+    },
+    analisisCosto: {
         type: String,
         default: ""
     },

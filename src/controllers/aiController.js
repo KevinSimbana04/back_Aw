@@ -2,6 +2,7 @@ import { GoogleGenerativeAI } from "@google/generative-ai";
 import fs from 'fs-extra';
 import Estudiante from "../models/Estudiante.js";
 import Historial from "../models/Historial.js";
+import { subirImagenCloudinary } from "../helpers/cloudinary.js";
 
 
 const scanFood = async (req, res) => {
@@ -9,13 +10,6 @@ const scanFood = async (req, res) => {
         if (!req.files || !req.files.image) {
             return res.status(400).json({ message: "No se ha subido ninguna imagen" });
         }
-
-        // Obtener ID del usuario del token
-        // Por ahora verificamos si existe en req.body para pruebas o req.estudiante
-        // En tu estudianteRoutes usas verificarAutenticacion? 
-        // Vamos a asumir que el middleware de auth coloca req.estudianteBDD._id o similar.
-        // Si no, lo pediremos en el body para este ejemplo, pero lo ideal es sacar del token.
-        // Ajustaremos esto si vemos el middleware Auth.
 
         let userId = req.estudianteHeader ? req.estudianteHeader._id : req.body.userId;
 
@@ -25,10 +19,16 @@ const scanFood = async (req, res) => {
             if (student) {
                 userProfile = {
                     nombre: student.nombre,
+                    objetivo: student.objetivo,
                     alergias: student.alergias,
                     preferencias: student.preferencias,
-                    objetivo: student.dieta,
-                    actividad: student.actividadFisica
+                    sexo: student.sexo,
+                    estatura: student.estatura,
+                    peso: student.peso,
+                    actividad: student.actividadFisica,
+                    presupuesto: student.presupuesto,
+                    frecuenciaCompra: student.frecuenciaCompra,
+                    dieta: student.dieta,
                 };
             }
         }
@@ -39,36 +39,48 @@ const scanFood = async (req, res) => {
         const imageFile = req.files.image;
         const imagePath = imageFile.tempFilePath;
 
-        // Convertir imagen a base64
+        // 1. Leer para Gemini
         const fileData = await fs.readFile(imagePath);
         const imageBase64 = fileData.toString('base64');
         const mimeType = imageFile.mimetype;
+
+        // 2. Subir a Cloudinary
+        const { secure_url: cloudinaryUrl, public_id: cloudinaryPublicId } = await subirImagenCloudinary(imagePath, "nutri-app/scans");
+
 
         const prompt = `
             Actúa como un nutricionista experto. Analiza esta imagen de comida.
             
             1. Identifica qué comida es.
-            2. Estima su contenido nutricional aproximado (calorías, carbohidratos, proteínas, grasas).
-            3. Dame una recomendación personalizada para un usuario con este perfil:
+            2. Estima su contenido nutricional aproximado (calorías, carbohidratos, proteínas, grasas, comidaAlternativa).
+            5. Estima si este plato se ajusta a un presupuesto: ${userProfile.presupuesto ? userProfile.presupuesto + " (" + (userProfile.frecuenciaCompra || "Mensual") + ")" : "No especificado"}. Si es caro, sugiere una alternativa económica.
+            6. Dame una recomendación personalizada para un usuario con este perfil:
                - Nombre: ${userProfile.nombre || "Usuario"}
                - Alergias: ${userProfile.alergias || "Ninguna"}
                - Preferencias: ${userProfile.preferencias || "Ninguna"}
-               - Objetivo/Dieta: ${userProfile.objetivo || "General"}
+               - Dieta Actual: ${userProfile.dieta || "General"}
+               - Objetivo: ${userProfile.objetivo || "Mejorar salud"}
                - Actividad Física: ${userProfile.actividad || "Moderada"}
+               - Sexo: ${userProfile.sexo || "No especificado"}
+               - Estatura: ${userProfile.estatura || "No especificado"}
+               - Peso: ${userProfile.peso || "No especificado"}
+               - Presupuesto: ${userProfile.presupuesto || "No especificado"}
 
             Si la imagen no es comida, responde indicando que no se detectó comida.
 
             Devuelve la respuesta ESTRICTAMENTE en este formato JSON (sin texto adicional fuera del JSON):
             {
-                "foodName": "Nombre del plato",
-                "nutrients": {
-                    "calories": "ej. 500 kcal",
-                    "carbs": "ej. 40g",
-                    "protein": "ej. 20g",
-                    "fat": "ej. 15g"
+                "NombreComida": "Nombre del plato",
+                "nurtrientes": {
+                    "calorias": "ej. 500 kcal",
+                    "carbohidratos": "ej. 40g",
+                    "proteinas": "ej. 20g",
+                    "grasas": "ej. 15g"
                 },
-                "isFood": true,
-                "recommendation": "Tu recomendación aquí..."
+                "comidaAlternativa": "Nombre del plato alternativo",
+                "EsComida": true,
+                "recomendacion": "Tu recomendación aquí...",
+                "analisisCosto": "Análisis de costo y alternativa si aplica"
             }
         `;
 
@@ -89,9 +101,6 @@ const scanFood = async (req, res) => {
         const jsonStr = text.replace(/```json/g, '').replace(/```/g, '').trim();
         const data = JSON.parse(jsonStr);
 
-        // Limpiar archivo temporal
-        await fs.unlink(imagePath);
-
         // Guardar en historial si existe usuario
         if (userId && data.isFood) {
             try {
@@ -102,14 +111,17 @@ const scanFood = async (req, res) => {
                     proteinas: data.nutrients?.protein || "N/A",
                     carbohidratos: data.nutrients?.carbs || "N/A",
                     grasas: data.nutrients?.fat || "N/A",
-                    recomendacion: data.recommendation
+                    recomendacion: data.recommendation,
+                    comidaAlternativa: data.comidaAlternativa,
+                    imagenUrl: cloudinaryUrl,
+                    publicId: cloudinaryPublicId
                 });
                 await nuevoHistorial.save();
                 // Adjuntar ID del historial a la respuesta por si el frontend lo necesita
                 data.historialId = nuevoHistorial._id;
             } catch (saveError) {
                 console.error("Error guardando historial:", saveError);
-                // No fallamos la request principal, solo logueamos
+
             }
         }
 
@@ -128,8 +140,6 @@ const getHistorial = async (req, res) => {
 
         let filtro = { estudiante: userId };
 
-        // Si se provee fecha (YYYY-MM-DD), filtramos por ese día
-        // Esto ayuda a ver las comidas "del día" (las 3 veces al día que menciona el usuario)
         if (fecha) {
             const start = new Date(fecha);
             start.setHours(0, 0, 0, 0);
