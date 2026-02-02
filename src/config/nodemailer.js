@@ -6,24 +6,22 @@ dotenv.config()
 
 const transporter = nodemailer.createTransport({
     service: "gmail",
+    host: process.env.HOST_MAILTRAP,
+    port: process.env.PORT_MAILTRAP,
     auth: {
         user: process.env.USER_MAILTRAP,
         pass: process.env.PASS_MAILTRAP,
     },
-});
-
-transporter.verify().then(() => {
-    console.log("✅ Nodemailer conectado correctamente v2");
-}).catch((error) => {
-    console.error("❌ Error de conexión Nodemailer:", error);
-});
+})
 
 /**
- * Función genérica para enviar correos
- * @param {string} to - Email del destinatario
- * @param {string} subject - Asunto del correo
- * @param {string} html - Contenido HTML del correo
- */
+ 
+
+    Función genérica para enviar correos
+    @param {string} to - Email del destinatario
+    @param {string} subject - Asunto del correo
+    @param {string} html - Contenido HTML del correo*/
+
 const sendMail = async (to, subject, html) => {
 
     try {
@@ -41,5 +39,4 @@ const sendMail = async (to, subject, html) => {
     }
 }
 
-export default sendMail
-
+export default sendMail 
