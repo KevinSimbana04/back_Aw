@@ -9,8 +9,8 @@ const transporter = nodemailer.createTransport({
     host: process.env.HOST_MAILTRAP,
     port: process.env.PORT_MAILTRAP,
     auth: {
-    user: process.env.USER_MAILTRAP,
-    pass: process.env.PASS_MAILTRAP,
+        user: process.env.USER_MAILTRAP,
+        pass: process.env.PASS_MAILTRAP,
     },
 })
 
@@ -24,7 +24,7 @@ const sendMail = async (to, subject, html) => {
 
     try {
         const info = await transporter.sendMail({
-            from: '"NUTRIAPP" <joel27tm@gmail.com>',
+            from: `"NUTRIAPP" <${process.env.USER_MAILTRAP}>`,
             to,
             subject,
             html,
