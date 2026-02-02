@@ -5,14 +5,20 @@ dotenv.config()
 
 
 const transporter = nodemailer.createTransport({
-    service: "gmail",
     host: process.env.HOST_MAILTRAP,
-    port: process.env.PORT_MAILTRAP,
+    port: 465,
+    secure: true,
     auth: {
         user: process.env.USER_MAILTRAP,
         pass: process.env.PASS_MAILTRAP,
     },
-})
+});
+
+transporter.verify().then(() => {
+    console.log("✅ Nodemailer conectado correctamente v2");
+}).catch((error) => {
+    console.error("❌ Error de conexión Nodemailer:", error);
+});
 
 /**
  * Función genérica para enviar correos
