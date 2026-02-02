@@ -1,4 +1,4 @@
-import sendMail from "../config/nodemailer.js"
+import sendMail from "../config/resend.js"
 
 
 const sendMailToRegister = (userMail, token) => {
